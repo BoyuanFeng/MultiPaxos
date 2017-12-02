@@ -47,20 +47,20 @@ class ProposerTests(unittest.TestCase):
         self.am(msg, 'preparemsg', proposal_id = PID(2,'A'))
         msg = self.p.prepare_Phase()
         self.am(msg, 'preparemsg', proposal_id = PID(3,'A'))
-'''        
+        
     def test_recv_promise_ignore_previous_proposal_value(self):
         self.p.prepare_Phase()
         self.p.prepare_Phase()
         self.p.prepare_Phase()
-        self.p.receive( PromiseMsg('B', 'A', PID(3,'A'), PID(1,'B'), 'add') )
+        self.p.receive_Promise( PromiseMsg('B', 'A', PID(3,'A'), PID(1,'B'), 'add') )
         self.p.prepare_Phase()
-        self.p.receive( PromiseMsg('B', 'A', PID(4,'A'), PID(3,'B'), 'no') )
+        self.p.receive_Promise( PromiseMsg('B', 'A', PID(4,'A'), PID(3,'B'), 'no') )
         self.ae( self.p.highest_accepted_id, PID(3,'B') )
         self.ae( self.p.proposed_value, 'no' )
-        self.p.receive( PromiseMsg('C', 'C', PID(4,'A'), PID(2,'B'), 'no') )
-        self.ae( self.p.highest_accepted_id, PID(3,'B') )
+        self.p.receive_Promise( PromiseMsg('C', 'C', PID(4,'A'), PID(2,'B'), 'no') )
+        self.ae( self.p.highest_accepted_id,       PID(3,'B') )
         self.ae( self.p.proposed_value, 'no' )
-        
+'''      
         
 class AcceptorTests (unittest.TestCase):
     

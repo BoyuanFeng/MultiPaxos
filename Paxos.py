@@ -37,7 +37,7 @@ class NackMsg (PaxosMsg):
 
 
 class AcceptMsg (PaxosMsg):
-    def __init__(self, from_uid, prosal_id, proposal_value):
+    def __init__(self, from_uid, proposal_id, proposal_value):
         self.from_uid       = from_uid
         self.proposal_id    = proposal_id
         self.proposal_value = proposal_value
@@ -150,7 +150,7 @@ class Proposer (MessageHandler):
                 if msg.last_accepted_value is not None:
                     self.proposed_value = msg.last_accepted_value
             # Selects Leader
-            if len(self.promises_received) == self.quirum_size:
+            if len(self.promises_received) == self.quorum_size:
                 self.leader = True
 
                 if self.proposed_value is not None:
