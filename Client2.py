@@ -35,7 +35,7 @@ def Server(socketSet,first):
 
 
 def Client(socketSet,first):
-	s = clientSetup('',6667)
+	s = clientSetup('',6666)
 	socketSet.append(s)
 	first[0] = 0
 	while first[0] == 0:
@@ -84,7 +84,7 @@ Store = [0]
 
 print 'Client2'
 first = [1]
-socketSet = []
+
 
 S = threading.Thread(target = Server, args = (socketSet,first))
 C = threading.Thread(target = Client, args = (socketSet,first))

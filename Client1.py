@@ -6,7 +6,7 @@ from CommonLibrary import serverSetup
 from CommonLibrary import clientSetup
 
 def Server1(socketSet,first):
-	conn = serverSetup('',6667)
+	conn = serverSetup('',6666)
 	socketSet.append(conn)
 	first[0] = 0
 	while first[0] == 0:
