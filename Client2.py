@@ -76,6 +76,7 @@ def Client(socketSet,first):
 
 
 
+Store = [0]
 
 
 

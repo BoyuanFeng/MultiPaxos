@@ -78,7 +78,7 @@ def Server2(socketSet,first):
 
 
 
-
+Store = [0]
 
 
 

@@ -65,6 +65,7 @@ def Client2(socketSet,first):
 first = [1]
 socketSet = []
 
+Store = [0]
 
 
 
