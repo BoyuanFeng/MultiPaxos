@@ -45,12 +45,15 @@ def respondPrepare(socketSet, localState, potentialLeader, bal):
 
 def leaderRespondAck(socketSet, localState, theirBal, existedDecision, myValue):
 	myValue = int(myValue)
-
+	theirBal = int(theirBal)
+	
+	print("leaderRespondAck: myBal is " + str(localState[0]) + ", theirBal is " + str(theirBal))
 	if theirBal != localState[0]:
 		localState[6] = 0
 		return
 	localState[6] += 1		# ls[6]: current acknowledge number
 
+	print("current acknowledge number is " + str(localState[6]))
 
 	if localState[6] < localState[7]:	# ld[7]: number of majority
 		return
@@ -59,9 +62,11 @@ def leaderRespondAck(socketSet, localState, theirBal, existedDecision, myValue):
 		localState[4] = localState[1]	# ls[4]: current leader id, ls[1] is myId
 		flag = 0
 		for i in range(len(existedDecision)):
-			if existedDecision[i] != -1:
+			#print("existedDecision[i]")
+			if int(existedDecision[i][1]) != -1:
 				flag = 1
 				break
+		
 		if flag == 0:
 			# no decision already
 			message = "a1,"+str(localState[0])+","+str(myValue)
@@ -77,14 +82,17 @@ def leaderRespondAck(socketSet, localState, theirBal, existedDecision, myValue):
 			myValue = val
 			message = "a1,"+str(localState[0])+","+str(myValue)
 			broadcast(socketSet, localState[1], message)
-
+		print("leaderRespondAck: the message is " + message)
 
 def followerRespondAc(socketSet, localState, receivedBal, receivedVal, leaderId):
 	receivedBal = int(receivedBal)
 	leaderId = int(leaderId)
 	if receivedBal >= localState[0]:
 		localState[0] = receivedBal
-		localState[1] = receivedVal
+		localState[5] = 0
+		localState[2] = receivedVal
+		localState[4] = leaderId
+		print("leader is " + str(localState[4]))
 		message = "a2,"+str(receivedBal)+","+str(receivedVal)
 		message = message.encode('utf-8')
 		socketSet[leaderId].send(message)
@@ -144,13 +152,21 @@ def handler(socketSet, localState, dataTokenQueue, existedDecision):
 	localState[5] += 1
 	if localState[4] == localState[1]:
 		localState[5] = 0
-	if localState[4] != localState[1]:
-		localState[6] = 0	# initialize current ack # and accept #, since I am not leader
-		localState[8] = 0
-	if localState[5] > 10:
+	if localState[1] == 0 and localState[5] > 10 and localState[5] < 40:
 		print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
 		localState[5] = 0
 		applyForLeader(socketSet, localState)
+	if localState[1] == 1 and localState[5] >= 40 and localState[5] < 70:
+		print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
+		localState[5] = 0
+		applyForLeader(socketSet, localState)
+	if localState[1] == 0 and localState[5] >= 70:
+		print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
+		localState[5] = 0
+		applyForLeader(socketSet, localState)
+
+
+
 	heartBeat(socketSet, localState)
 	# Part I: process all data in dataTokenQueue
 	for tokens in dataTokenQueue:

@@ -13,6 +13,7 @@ def Client1(socketSet,first, localState):
 	first[0] = 0
 	while first[0] == 0:
 		time.sleep(1)
+	socketSet.append(s)
 
 	conn1 = socketSet[0]
 	conn2 = socketSet[1]
@@ -37,7 +38,7 @@ def Client1(socketSet,first, localState):
 		try:
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
-			print("client1 received: " + data)
+			print("client2 received: " + data)
 			dataTokenQueue = Parse(data)
 			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 

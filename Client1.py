@@ -10,11 +10,12 @@ from CommonLibrary import handler
 def Server1(socketSet,first, localState):
 	conn = serverSetup('',6666)
 	socketSet.append(conn)
+	socketSet.append(conn)
 	first[0] = 0
 	while first[0] == 0:
 		time.sleep(1)
-	conn1 = socketSet[0]
-	conn2 = socketSet[1]
+	conn1 = socketSet[1]
+	conn2 = socketSet[2]
 
 
 	dataTokenQueue = []
@@ -26,9 +27,11 @@ def Server1(socketSet,first, localState):
 		print("round " + str(count) )
 		count += 1
 		try:
+			
+
 			data = conn1.recv(1024)
 			data = data.decode("utf-8")
-			print("client1 received: " + data)
+			print("client2 received: " + data)
 			dataTokenQueue = Parse(data)
 			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 
@@ -37,7 +40,7 @@ def Server1(socketSet,first, localState):
 		try:
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
-			print("client1 received: " + data)
+			print("client3 received: " + data)
 			dataTokenQueue = Parse(data)
 			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 
