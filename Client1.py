@@ -19,7 +19,7 @@ def Server1(socketSet,first, localState):
 
 
 	dataTokenQueue = []
-
+	requestQueue = [1,3,5,7,9]
 	existedDecision = []
 	#finish setting up and start actual work here
 	count = 1
@@ -33,18 +33,18 @@ def Server1(socketSet,first, localState):
 			data = data.decode("utf-8")
 			print("client2 received: " + data)
 			dataTokenQueue = Parse(data)
-			handler(socketSet, localState, dataTokenQueue, existedDecision)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 		except socket.timeout: 
-			handler(socketSet, localState, dataTokenQueue, existedDecision)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 
 		try:
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
 			print("client3 received: " + data)
 			dataTokenQueue = Parse(data)
-			handler(socketSet, localState, dataTokenQueue, existedDecision)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 		except socket.timeout: 
-			handler(socketSet, localState, dataTokenQueue, existedDecision)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 	conn.close()
 
 
@@ -63,10 +63,11 @@ def Server2(socketSet,first, localState):
 
 	conn.close()
 
-localState = [0,0,-1,0,-1,0,0,2,0]
+localState = [0,0,-1,0,-1,0,0,2,0,0,0]
 
 socketSet = []
 first = [1]
+
 
 
 S1 = threading.Thread(target = Server1, args = (socketSet,first, localState))

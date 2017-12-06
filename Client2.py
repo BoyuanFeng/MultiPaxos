@@ -59,18 +59,18 @@ def Client(socketSet,first, localState):
 			data = data.decode("utf-8")
 			print("client1 received: " + data)
 			dataTokenQueue = Parse(data)
-			handler(socketSet, localState, dataTokenQueue, existedDecision)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 		except socket.timeout: 
-			handler(socketSet, localState, dataTokenQueue, existedDecision)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 
 		try:
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
 			print("client3 received: " + data)
 			dataTokenQueue = Parse(data)
-			handler(socketSet, localState, dataTokenQueue, existedDecision)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 		except socket.timeout: 
-			handler(socketSet, localState, dataTokenQueue, existedDecision)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 
 
 
@@ -84,8 +84,9 @@ def Client(socketSet,first, localState):
 
 socketSet = []
 first = [1]
-localState = [0,1,-1,0,-1,0,0,2,0]
+localState = [0,1,-1,0,-1,0,0,2,0,0,0]
 
+requestQueue = [1,3,5,7,9]
 
 S = threading.Thread(target = Server, args = (socketSet,first, localState))
 C = threading.Thread(target = Client, args = (socketSet,first, localState))

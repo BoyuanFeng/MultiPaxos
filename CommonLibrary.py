@@ -60,29 +60,54 @@ def leaderRespondAck(socketSet, localState, theirBal, existedDecision, myValue):
 	else:
 		print("I am THE leader!!!, my bal is " + str(localState[0]))
 		localState[4] = localState[1]	# ls[4]: current leader id, ls[1] is myId
-		flag = 0
-		for i in range(len(existedDecision)):
-			#print("existedDecision[i]")
-			if int(existedDecision[i][1]) != -1:
-				flag = 1
-				break
-		
-		if flag == 0:
-			# no decision already
-			message = "a1,"+str(localState[0])+","+str(myValue)
-			broadcast(socketSet, localState[1], message)
-		else:
-			# has decision now
-			val = existedDecision[0][1]
-			bal = existedDecision[0][0]
-			for decision in existedDecision:
-				if decision[0] > bal:
-					bal = decision[0]
-					val = decision[1]
-			myValue = val
-			message = "a1,"+str(localState[0])+","+str(myValue)
-			broadcast(socketSet, localState[1], message)
-		print("leaderRespondAck: the message is " + message)
+
+def leaderSuggest(socketSet, localState, existedDecision, requestQueue):
+	
+	if localState[9] >= len(requestQueue):
+		time.sleep(1)
+		return
+	myValue = requestQueue[localState[9]]
+
+
+	if localState[4] != localState[1]:
+		return
+	print("requestCount is " + str(localState[9]) + ", myValue is " + str(myValue))
+
+	myValue = int(myValue)
+
+	if localState[10] != 0:
+		return
+	else:
+		localState[10] = 1
+
+
+	flag = 0
+	for i in range(len(existedDecision)):
+		#print("existedDecision[i]")
+		if int(existedDecision[i][1]) != -1:
+			flag = 1
+			break
+	
+	if flag == 0:
+		# no decision already
+		print("leaderSuggest branch 1")
+		message = "a1,"+str(localState[0])+","+str(myValue)
+		broadcast(socketSet, localState[1], message)
+	else:
+		print("leaderSuggest branch 2")
+		# has decision now
+		val = existedDecision[0][1]
+		bal = existedDecision[0][0]
+		for decision in existedDecision:
+			if decision[0] > bal:
+				bal = decision[0]
+				val = decision[1]
+		myValue = val
+		message = "a1,"+str(localState[0])+","+str(myValue)
+		broadcast(socketSet, localState[1], message)
+	print("leaderRespondAck: the message is " + message)
+	existedDecision.clear()
+
 
 def followerRespondAc(socketSet, localState, receivedBal, receivedVal, leaderId):
 	receivedBal = int(receivedBal)
@@ -108,6 +133,10 @@ def leaderDecide(socketSet, localState, bal, val):
 		localState[2] = val
 		localState[3] = val
 		broadcast(socketSet, localState[1],"a3,"+str(bal)+","+str(val))
+		print("decided: final value is " + str(val) + ", final bal is " + str(bal))
+		localState[10] = 0
+		localState[8] = 0
+		localState[9] += 1
 
 def participantDecide(localState, bal, val):
 	bal = int(bal)
@@ -116,7 +145,6 @@ def participantDecide(localState, bal, val):
 		localState[2] = val
 		localState[3] = bal
 		print("decided: final value is " + str(val) + ", final bal is " + str(bal))
-
 
 
 def heartBeat(socketSet, localState):
@@ -146,9 +174,10 @@ def receiveHeart(localState, leaderId):
 # DO: receive "a2", send "a3"
 # (socketSet, localState, bal, val)
 
+# participantDecide: participant now. received ("a3", bal, num) from majority, decide value now
 
 
-def handler(socketSet, localState, dataTokenQueue, existedDecision):
+def handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue):
 	localState[5] += 1
 	if localState[4] == localState[1]:
 		localState[5] = 0
@@ -168,14 +197,15 @@ def handler(socketSet, localState, dataTokenQueue, existedDecision):
 
 
 	heartBeat(socketSet, localState)
-	# Part I: process all data in dataTokenQueue
+	leaderSuggest(socketSet, localState, existedDecision, requestQueue)
 	for tokens in dataTokenQueue:
 		if tokens[0] == 'p':
 			respondPrepare(socketSet, localState, tokens[2], tokens[1])
 		elif tokens[0] == 'ac':
 			existedDecision.append([tokens[2],tokens[3]])
 			# here 0 could be replaced by any value proposed by client
-			leaderRespondAck(socketSet, localState, tokens[1], existedDecision, 1)#1 is leader's choice
+			leaderRespondAck(socketSet, localState, tokens[1], existedDecision, requestQueue[localState[9]])#1 is leader's choice
+			leaderSuggest(socketSet, localState, existedDecision, requestQueue)
 		elif tokens[0] == 'a1':
 			followerRespondAc(socketSet, localState, tokens[1], tokens[2], localState[4])
 		elif tokens[0] == 'a2':
