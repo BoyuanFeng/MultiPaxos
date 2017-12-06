@@ -4,8 +4,10 @@ import time
 import sys, select
 from CommonLibrary import serverSetup
 from CommonLibrary import clientSetup
+from CommonLibrary import Parse
+from CommonLibrary import handler
 
-def Client1(socketSet,first):
+def Client1(socketSet,first, localState):
 	s = clientSetup('',7777)
 	socketSet.append(s)
 	first[0] = 0
@@ -15,21 +17,31 @@ def Client1(socketSet,first):
 	conn1 = socketSet[0]
 	conn2 = socketSet[1]
 
+	existedDecision = []
 
-
+	count = 1
+	dataTokenQueue = []
 	#finish setting up and start actual work here
 	while 1:
+		print("round " + str(count) )
+		count += 1
 		try:
 			data = conn1.recv(1024)
-			print("client3 received: " + data)
+			data = data.decode("utf-8")
+			print("client1 received: " + data)
+			dataTokenQueue = Parse(data)
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 
-			conn1.send("From client3: good")
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 
 		try:
 			data = conn2.recv(1024)
-			print("client3 received: " + data)
+			data = data.decode("utf-8")
+			print("client1 received: " + data)
+			dataTokenQueue = Parse(data)
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 
-			conn2.send("From client3: good")
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 
 
 	#end actual work here
@@ -40,7 +52,7 @@ def Client1(socketSet,first):
 
 
 
-def Client2(socketSet,first):
+def Client2(socketSet,first, localState):
 	while first[0] == 1:
 		time.sleep(1)
 	s = clientSetup('',8888)
@@ -48,12 +60,13 @@ def Client2(socketSet,first):
 	first[0] = 1
 
 
+
 	#finish setting up and start actual work here
 	while 1:
 		#localLock.acquire()
 		time.sleep(1)
 		#localLock.release()
-	# end actual work here
+		# end actual work here
 
 
 	s.close()
@@ -61,20 +74,13 @@ def Client2(socketSet,first):
 
 
 
-
+socketSet = []
 first = [1]
-
-Store = [0]
-
+localState = [0,2,-1,0,-1,0,0,2,0]
 
 
-
-	
-print 'Client3'
-
-
-C1 = threading.Thread(target = Client1, args = (socketSet,first))
-C2 = threading.Thread(target = Client2, args = (socketSet,first))
+C1 = threading.Thread(target = Client1, args = (socketSet,first, localState))
+C2 = threading.Thread(target = Client2, args = (socketSet,first, localState))
 C1.start()
 C2.start()
 C1.join()

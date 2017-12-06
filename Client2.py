@@ -4,12 +4,14 @@ import time
 import sys, select
 from CommonLibrary import serverSetup
 from CommonLibrary import clientSetup
+from CommonLibrary import Parse
+from CommonLibrary import handler
 
 
 
 
 
-def Server(socketSet,first):
+def Server(socketSet,first, localState):
 	while first[0] == 1:
 		time.sleep(1)
 	conn = serverSetup('',8888)
@@ -34,7 +36,7 @@ def Server(socketSet,first):
 
 
 
-def Client(socketSet,first):
+def Client(socketSet,first, localState):
 	s = clientSetup('',6666)
 	socketSet.append(s)
 	first[0] = 0
@@ -43,20 +45,33 @@ def Client(socketSet,first):
 
 	conn1 = socketSet[0]
 	conn2 = socketSet[1]
+	existedDecision = []
 
+	dataTokenQueue = []
+	count = 1
 	#finish setting up and start actual work here
 	while 1:
+		print("round " + str(count) )
+		count += 1
 		try:
 			data = conn1.recv(1024)
-			print("client2 received: " + data)
+			data = data.decode("utf-8")
+			print("client1 received: " + data)
+			dataTokenQueue = Parse(data)
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 
-			conn1.send("From client2: good")
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 
 		try:
 			data = conn2.recv(1024)
-			print("client2 received: " + data)
+			data = data.decode("utf-8")
+			print("client1 received: " + data)
+			dataTokenQueue = Parse(data)
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 
-			conn2.send("From client2: good")
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
+
+
 
 	# end actual work here
 
@@ -66,28 +81,13 @@ def Client(socketSet,first):
 	s.close()
 
 
-
-
-
-
-
-
-
-
-
-
-Store = [0]
-
-
-
-
-
-print 'Client2'
+socketSet = []
 first = [1]
+localState = [0,1,-1,0,-1,0,0,2,0]
 
 
-S = threading.Thread(target = Server, args = (socketSet,first))
-C = threading.Thread(target = Client, args = (socketSet,first))
+S = threading.Thread(target = Server, args = (socketSet,first, localState))
+C = threading.Thread(target = Client, args = (socketSet,first, localState))
 S.start()
 C.start()
 S.join()

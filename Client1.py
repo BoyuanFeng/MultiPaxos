@@ -4,55 +4,48 @@ import time
 import sys, select
 from CommonLibrary import serverSetup
 from CommonLibrary import clientSetup
+from CommonLibrary import Parse
+from CommonLibrary import handler
 
-def Server1(socketSet,first):
+def Server1(socketSet,first, localState):
 	conn = serverSetup('',6666)
 	socketSet.append(conn)
 	first[0] = 0
 	while first[0] == 0:
 		time.sleep(1)
-
 	conn1 = socketSet[0]
 	conn2 = socketSet[1]
 
+
+	dataTokenQueue = []
+
+	existedDecision = []
 	#finish setting up and start actual work here
+	count = 1
 	while 1:
+		print("round " + str(count) )
+		count += 1
 		try:
 			data = conn1.recv(1024)
+			data = data.decode("utf-8")
 			print("client1 received: " + data)
+			dataTokenQueue = Parse(data)
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 
-			conn1.send("From client1: good")
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 
 		try:
 			data = conn2.recv(1024)
+			data = data.decode("utf-8")
 			print("client1 received: " + data)
+			dataTokenQueue = Parse(data)
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 		except socket.timeout: 
-			conn2.send("From client1: good")
-
-	# end actual work
-	
-
-
-
-
+			handler(socketSet, localState, dataTokenQueue, existedDecision)
 	conn.close()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def Server2(socketSet,first):
+def Server2(socketSet,first, localState):
 	while first[0] == 1:
 		time.sleep(1)
 	conn = serverSetup('',7777)
@@ -60,51 +53,21 @@ def Server2(socketSet,first):
 	first[0] = 1
 
 
-	# work is done in server1. Nonsense here.
 	while 1:
 		time.sleep(1)
 		#localLock.acquire()
-		#localLock.release()	
+		#localLock.release()
 
-
-	#end actual work here
-
-	
 	conn.close()
 
-
-
-
-
-
-
-Store = [0]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+localState = [0,0,-1,0,-1,0,0,2,0]
 
 socketSet = []
 first = [1]
 
-print 'Client1'
 
-S1 = threading.Thread(target = Server1, args = (socketSet,first))
-S2 = threading.Thread(target = Server2, args = (socketSet,first))
+S1 = threading.Thread(target = Server1, args = (socketSet,first, localState))
+S2 = threading.Thread(target = Server2, args = (socketSet,first, localState))
 S1.start()
 S2.start()
 S1.join()
