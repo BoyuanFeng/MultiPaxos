@@ -24,6 +24,7 @@ def Client1(socketSet,first, localState):
 	dataTokenQueue = []
 	#finish setting up and start actual work here
 	while 1:
+		time.sleep(1)
 		print("round " + str(count) )
 		count += 1
 		try:

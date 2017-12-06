@@ -52,6 +52,8 @@ def Client(socketSet,first, localState):
 	count = 1
 	#finish setting up and start actual work here
 	while 1:
+		time.sleep(1)
+
 		print("round " + str(count) )
 		count += 1
 		try:
