@@ -7,7 +7,13 @@ from CommonLibrary import clientSetup
 from CommonLibrary import Parse
 from CommonLibrary import handler
 
-def Server1(socketSet,first, localState):
+
+dataTokenQueue = []
+existedDecision = []
+requestQueue = [1,3,5,7,9]
+
+
+def Server1(socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue):
 	conn = serverSetup('',6666)
 	socketSet.append(conn)
 	socketSet.append(conn)
@@ -17,10 +23,6 @@ def Server1(socketSet,first, localState):
 	conn1 = socketSet[1]
 	conn2 = socketSet[2]
 
-
-	dataTokenQueue = []
-	requestQueue = [1,3,5,7,9]
-	existedDecision = []
 	#finish setting up and start actual work here
 	count = 1
 	while 1:
@@ -39,6 +41,20 @@ def Server1(socketSet,first, localState):
 		except socket.timeout: 
 			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 
+	conn.close()
+
+
+def Server2(socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue):
+	while first[0] == 1:
+		time.sleep(1)
+	conn = serverSetup('',7777)
+	socketSet.append(conn)
+	first[0] = 1
+	conn2 = socketSet[2]
+
+
+	while 1:
+		time.sleep(1)
 		try:
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
@@ -47,19 +63,8 @@ def Server1(socketSet,first, localState):
 			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 		except socket.timeout: 
 			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
-	conn.close()
 
 
-def Server2(socketSet,first, localState):
-	while first[0] == 1:
-		time.sleep(1)
-	conn = serverSetup('',7777)
-	socketSet.append(conn)
-	first[0] = 1
-
-
-	while 1:
-		time.sleep(1)
 		#localLock.acquire()
 		#localLock.release()
 
@@ -72,8 +77,8 @@ first = [1]
 
 
 
-S1 = threading.Thread(target = Server1, args = (socketSet,first, localState))
-S2 = threading.Thread(target = Server2, args = (socketSet,first, localState))
+S1 = threading.Thread(target = Server1, args = (socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue))
+S2 = threading.Thread(target = Server2, args = (socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue))
 S1.start()
 S2.start()
 S1.join()

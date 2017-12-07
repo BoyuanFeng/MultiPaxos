@@ -8,20 +8,31 @@ from CommonLibrary import Parse
 from CommonLibrary import handler
 
 
+dataTokenQueue = []
+existedDecision = []
+requestQueue = [1,3,5,7,9]
 
 
 
-def Server(socketSet,first, localState):
+def Server(socketSet,first, localState,dataTokenQueue,existedDecision,requestQueue):
 	while first[0] == 1:
 		time.sleep(1)
 	conn = serverSetup('',8888)
 	socketSet.append(conn)
 	first[0] = 1
+	conn2 = socketSet[2]
 
 	#finish setting up and start actual work here
 	while 1:
 		time.sleep(1)
-	# end actual work here
+		try:
+			data = conn2.recv(1024)
+			data = data.decode("utf-8")
+			print("client3 received: " + data)
+			dataTokenQueue = Parse(data)
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
+		except socket.timeout: 
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 	
 
 
@@ -36,7 +47,7 @@ def Server(socketSet,first, localState):
 
 
 
-def Client(socketSet,first, localState):
+def Client(socketSet,first, localState,dataTokenQueue,existedDecision,requestQueue):
 	s = clientSetup('',6666)
 	socketSet.append(s)
 	socketSet.append(s)
@@ -45,10 +56,7 @@ def Client(socketSet,first, localState):
 		time.sleep(1)
 
 	conn1 = socketSet[0]
-	conn2 = socketSet[2]
-	existedDecision = []
 
-	dataTokenQueue = []
 	count = 1
 	#finish setting up and start actual work here
 	while 1:
@@ -60,15 +68,6 @@ def Client(socketSet,first, localState):
 			data = conn1.recv(1024)
 			data = data.decode("utf-8")
 			print("client1 received: " + data)
-			dataTokenQueue = Parse(data)
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
-		except socket.timeout: 
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
-
-		try:
-			data = conn2.recv(1024)
-			data = data.decode("utf-8")
-			print("client3 received: " + data)
 			dataTokenQueue = Parse(data)
 			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 		except socket.timeout: 
@@ -88,10 +87,8 @@ socketSet = []
 first = [1]
 localState = [0,1,-1,0,-1,0,0,2,0,0,0,100]
 
-requestQueue = [1,3,5,7,9]
-
-S = threading.Thread(target = Server, args = (socketSet,first, localState))
-C = threading.Thread(target = Client, args = (socketSet,first, localState))
+S = threading.Thread(target = Server, args = (socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue))
+C = threading.Thread(target = Client, args = (socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue))
 S.start()
 C.start()
 S.join()
