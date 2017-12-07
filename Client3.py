@@ -6,12 +6,8 @@ from CommonLibrary import serverSetup
 from CommonLibrary import clientSetup
 from CommonLibrary import Parse
 from CommonLibrary import handler
-from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
-        QDialogButtonBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout,
-        QLabel, QLineEdit, QMenu, QMenuBar, QPushButton, QSpinBox, QTextEdit,
-        QVBoxLayout)
 
-def Client1(socketSet,first, localState, requestQueue):
+def Client1(socketSet,first, localState):
 	s = clientSetup('',7777)
 	socketSet.append(s)
 	first[0] = 0
@@ -58,7 +54,7 @@ def Client1(socketSet,first, localState, requestQueue):
 
 
 
-def Client2(socketSet,first, localState, requestQueue):
+def Client2(socketSet,first, localState):
 	while first[0] == 1:
 		time.sleep(1)
 	s = clientSetup('',8888)
@@ -82,13 +78,12 @@ def Client2(socketSet,first, localState, requestQueue):
 
 socketSet = []
 first = [1]
-localState = [0,3,-1,0,-1,0,0,2,0,0,0,100]
+localState = [0,2,-1,0,-1,0,0,2,0,0,0,100]
 
-requestQueue = [[1,1],[3,1],[5,2],[7,1],[9,3]]
+requestQueue = [1,3,5,7,9]
 
-
-C1 = threading.Thread(target = Client1, args = (socketSet,first, localState, requestQueue))
-C2 = threading.Thread(target = Client2, args = (socketSet,first, localState, requestQueue))
+C1 = threading.Thread(target = Client1, args = (socketSet,first, localState))
+C2 = threading.Thread(target = Client2, args = (socketSet,first, localState))
 C1.start()
 C2.start()
 C1.join()

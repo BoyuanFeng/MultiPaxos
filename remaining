@@ -1,6 +1,5 @@
-1. multi-paxos							done
+1. multi-paxos
 2. add an interface for story
 3. log
-4. disconnect and connect
-5. configuration change
-
+4. configuration change
+5. disconnect and connect

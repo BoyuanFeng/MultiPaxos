@@ -1,2 +1,4 @@
-with open('test1','wb') as f:
-	f.write('test'.encode('utf-8'))
+s1 = "haha\n"
+with open("log1.txt", "a") as myfile:		
+	myfile.write(s1)
+

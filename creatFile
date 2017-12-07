@@ -1,0 +1,6 @@
+echo "" > log0.txt
+echo "" > log1.txt
+echo "" > log2.txt
+echo "" > log3.txt
+echo "" > log4.txt
+
