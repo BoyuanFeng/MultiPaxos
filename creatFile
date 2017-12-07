@@ -1,6 +1,6 @@
-echo "" > log0.txt
-echo "" > log1.txt
-echo "" > log2.txt
-echo "" > log3.txt
-echo "" > log4.txt
+touch log0.txt
+touch log1.txt
+touch log2.txt
+touch log3.txt
+touch log4.txt
 

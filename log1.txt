@@ -1,1 +1,4 @@
-
+val: 1, bal: 7, ticket is: 100
+val: 3, bal: 7, ticket is: 100
+val: 5, bal: 7, ticket is: 100
+val: 7, bal: 7, ticket is: 100
