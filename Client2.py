@@ -6,12 +6,16 @@ from CommonLibrary import serverSetup
 from CommonLibrary import clientSetup
 from CommonLibrary import Parse
 from CommonLibrary import handler
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
+        QDialogButtonBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout,
+        QLabel, QLineEdit, QMenu, QMenuBar, QPushButton, QSpinBox, QTextEdit,
+        QVBoxLayout)
 
 
 
 
 
-def Server(socketSet,first, localState):
+def Server(socketSet,first, localState, requestQueue):
 	while first[0] == 1:
 		time.sleep(1)
 	conn = serverSetup('',8888)
@@ -36,7 +40,7 @@ def Server(socketSet,first, localState):
 
 
 
-def Client(socketSet,first, localState):
+def Client(socketSet,first, localState, requestQueue):
 	s = clientSetup('',6666)
 	socketSet.append(s)
 	socketSet.append(s)
@@ -86,12 +90,13 @@ def Client(socketSet,first, localState):
 
 socketSet = []
 first = [1]
-localState = [0,1,-1,0,-1,0,0,2,0,0,0]
+localState = [0,2,-1,0,-1,0,0,2,0,0,0,100]
 
-requestQueue = [1,3,5,7,9]
+requestQueue = [[1,1],[3,1],[5,2],[7,1],[9,3]]
 
-S = threading.Thread(target = Server, args = (socketSet,first, localState))
-C = threading.Thread(target = Client, args = (socketSet,first, localState))
+
+S = threading.Thread(target = Server, args = (socketSet,first, localState, requestQueue))
+C = threading.Thread(target = Client, args = (socketSet,first, localState, requestQueue))
 S.start()
 C.start()
 S.join()

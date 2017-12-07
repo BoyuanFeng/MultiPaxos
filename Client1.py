@@ -6,8 +6,13 @@ from CommonLibrary import serverSetup
 from CommonLibrary import clientSetup
 from CommonLibrary import Parse
 from CommonLibrary import handler
+from PyQt5.QtWidgets import (QApplication, QComboBox, QDialog,
+        QDialogButtonBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout,
+        QLabel, QLineEdit, QMenu, QMenuBar, QPushButton, QSpinBox, QTextEdit,
+        QVBoxLayout)
 
-def Server1(socketSet,first, localState):
+requestQueue = [[1,1],[3,1],[5,2],[7,1],[9,3]]
+def Server1(socketSet,first, localState, requestQueue):
 	conn = serverSetup('',6666)
 	socketSet.append(conn)
 	socketSet.append(conn)
@@ -19,7 +24,6 @@ def Server1(socketSet,first, localState):
 
 
 	dataTokenQueue = []
-	requestQueue = [1,3,5,7,9]
 	existedDecision = []
 	#finish setting up and start actual work here
 	count = 1
@@ -29,8 +33,6 @@ def Server1(socketSet,first, localState):
 		print("round " + str(count) )
 		count += 1
 		try:
-			
-
 			data = conn1.recv(1024)
 			data = data.decode("utf-8")
 			print("client2 received: " + data)
@@ -50,7 +52,7 @@ def Server1(socketSet,first, localState):
 	conn.close()
 
 
-def Server2(socketSet,first, localState):
+def Server2(socketSet,first, localState, requestQueue):
 	while first[0] == 1:
 		time.sleep(1)
 	conn = serverSetup('',7777)
@@ -65,16 +67,18 @@ def Server2(socketSet,first, localState):
 
 	conn.close()
 
-localState = [0,0,-1,0,-1,0,0,2,0,0,0]
+localState = [0,1,-1,0,-1,0,0,2,0,0,0,100]
 
 socketSet = []
 first = [1]
 
 
 
-S1 = threading.Thread(target = Server1, args = (socketSet,first, localState))
-S2 = threading.Thread(target = Server2, args = (socketSet,first, localState))
+S1 = threading.Thread(target = Server1, args = (socketSet,first, localState, requestQueue))
+S2 = threading.Thread(target = Server2, args = (socketSet,first, localState, requestQueue))
 S1.start()
 S2.start()
 S1.join()
 S2.join()
+
+

@@ -25,6 +25,7 @@ def broadcast(socketSet, myId, message):
 
 
 def applyForLeader(socketSet, localState):
+	print("applyForLeader")
 	localState[0] += random.randint(1,10)  #ballotNum += 1
 	message = "p,"+str(localState[0])+","+str(localState[1])
 	broadcast(socketSet, localState[1], message)
@@ -43,8 +44,7 @@ def respondPrepare(socketSet, localState, potentialLeader, bal):
 
 
 
-def leaderRespondAck(socketSet, localState, theirBal, existedDecision, myValue):
-	myValue = int(myValue)
+def leaderRespondAck(socketSet, localState, theirBal, existedDecision):
 	theirBal = int(theirBal)
 	
 	print("leaderRespondAck: myBal is " + str(localState[0]) + ", theirBal is " + str(theirBal))
@@ -66,14 +66,15 @@ def leaderSuggest(socketSet, localState, existedDecision, requestQueue):
 	if localState[9] >= len(requestQueue):
 		time.sleep(1)
 		return
-	myValue = requestQueue[localState[9]]
-
+	myValue = requestQueue[localState[9]][0]
+	processID = requestQueue[localState[9]][1]
+	myValue = int(myValue)
+	processID = int(processID)	
 
 	if localState[4] != localState[1]:
 		return
 	print("requestCount is " + str(localState[9]) + ", myValue is " + str(myValue))
 
-	myValue = int(myValue)
 
 	if localState[10] != 0:
 		return
@@ -103,7 +104,7 @@ def leaderSuggest(socketSet, localState, existedDecision, requestQueue):
 				bal = decision[0]
 				val = decision[1]
 		myValue = val
-		message = "a1,"+str(localState[0])+","+str(myValue)
+		message = "a1,"+str(localState[0])+","+str(myValue)+","+str(processID)
 		broadcast(socketSet, localState[1], message)
 	print("leaderRespondAck: the message is " + message)
 	existedDecision.clear()
@@ -130,13 +131,31 @@ def leaderDecide(socketSet, localState, bal, val):
 		return # I am not a leader now
 	localState[8] += 1
 	if localState[8] >= localState[7]:
-		localState[2] = val
-		localState[3] = val
 		broadcast(socketSet, localState[1],"a3,"+str(bal)+","+str(val))
 		print("decided: final value is " + str(val) + ", final bal is " + str(bal))
-		localState[10] = 0
+		s1 = "val: " + str(val) + ", bal: " + str(bal) + ", ticket is: " + str(localState[11])
+		s1 = s1.encode('utf-8')
+		if localState[1] == 1:
+			with open("log1.txt", "a") as myfile:		
+				myfile.write(s1)
+		if localState[1] == 2:
+			with open("log2.txt", "a") as myfile:
+				myfile.write(s1)
+		if localState[1] == 3:
+			with open("log3.txt", "a") as myfile:
+				myfile.write(s1)
+		if localState[1] == 4:
+			with open("log4.txt", "a") as myfile:
+				myfile.write(s1)
+		if localState[1] == 5:
+			with open("log5.txt", "a") as myfile:
+				myfile.write(s1)
+
+		localState[2] = 0
+		localState[3] = 0
 		localState[8] = 0
 		localState[9] += 1
+		localState[10] = 0
 
 def participantDecide(localState, bal, val):
 	bal = int(bal)
@@ -204,7 +223,7 @@ def handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue
 		elif tokens[0] == 'ac':
 			existedDecision.append([tokens[2],tokens[3]])
 			# here 0 could be replaced by any value proposed by client
-			leaderRespondAck(socketSet, localState, tokens[1], existedDecision, requestQueue[localState[9]])#1 is leader's choice
+			leaderRespondAck(socketSet, localState, tokens[1], existedDecision)#1 is leader's choice
 			leaderSuggest(socketSet, localState, existedDecision, requestQueue)
 		elif tokens[0] == 'a1':
 			followerRespondAc(socketSet, localState, tokens[1], tokens[2], localState[4])
