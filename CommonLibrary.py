@@ -20,11 +20,15 @@ def broadcast(socketSet, myId, message):
 	myId = int(myId)
 	for i in range(len(socketSet)):
 		if i != myId:
-			socketSet[i].send(message.encode('utf-8'))
-	
+			try:
+				print("broadcast to "+str(i))
+				socketSet[i].send(message.encode('utf-8'))
+			except:
+				pass
 
 
 def applyForLeader(socketSet, localState):
+	print("apply for leader")
 	localState[0] += random.randint(1,10)  #ballotNum += 1
 	message = "p,"+str(localState[0])+","+str(localState[1])
 	broadcast(socketSet, localState[1], message)
@@ -60,6 +64,7 @@ def leaderRespondAck(socketSet, localState, theirBal, existedDecision, myValue):
 	else:
 		print("I am THE leader!!!, my bal is " + str(localState[0]))
 		localState[4] = localState[1]	# ls[4]: current leader id, ls[1] is myId
+		localState[6] = 0
 
 def leaderSuggest(socketSet, localState, existedDecision, requestQueue):
 	
@@ -123,17 +128,20 @@ def followerRespondAc(socketSet, localState, receivedBal, receivedVal, leaderId)
 		socketSet[leaderId].send(message)
 		
 
-def leaderDecide(socketSet, localState, bal, val):
+def leaderDecide(socketSet, localState, bal, val, requestQueue):
 	bal = int(bal)
 	val = int(val)
 	if localState[4] != localState[1]:
 		return # I am not a leader now
 	localState[8] += 1
-	if localState[8] >= localState[7]:
+	if localState[9] >= len(requestQueue):
+		return
+	if localState[8] >= localState[7] and val == requestQueue[localState[9]]:
 		localState[2] = val
 		localState[3] = val
 		broadcast(socketSet, localState[1],"a3,"+str(bal)+","+str(val))
 		print("decided: final value is " + str(val) + ", final bal is " + str(bal))
+		localState[11] -= val
 		localState[10] = 0
 		localState[8] = 0
 		localState[9] += 1
@@ -153,6 +161,8 @@ def leaderDecide(socketSet, localState, bal, val):
 		if localState[1] == 4:
 			with open("log4.txt", "a") as myfile:
 				myfile.write(s1)
+	else:
+		localState[8] = 0
 
 
 def participantDecide(localState, bal, val):
@@ -162,6 +172,7 @@ def participantDecide(localState, bal, val):
 		localState[2] = val
 		localState[3] = bal
 		print("decided: final value is " + str(val) + ", final bal is " + str(bal))
+		localState[11] -= val
 		s1 = "val: " + str(val) + ", bal: " + str(bal) + ", ticket is: " + str(localState[11]) + "\n"
 		if localState[1] == 0:
 			with open("log0.txt", "a") as myfile:
@@ -185,11 +196,15 @@ def participantDecide(localState, bal, val):
 
 def heartBeat(socketSet, localState):
 	if localState[4] == localState[1]:
-		broadcast(socketSet, localState[1], "h,"+str(localState[1]))
+		print("send heart beat, myId is " + str(localState[1]) + ", myBal is " + str(localState[0]))
+		broadcast(socketSet, localState[1], "h,"+str(localState[1])+","+str(localState[0]))
 
-def receiveHeart(localState, leaderId):
+def receiveHeart(localState, leaderId, leaderBal):
+	print("received heart beat, leaderId = " + str(leaderId) + ", leaderBal = " + str(leaderBal) )
 	leaderId = int(leaderId)
-	if leaderId == localState[4]:
+	leaderBal = int(leaderId)
+	if leaderBal >= localState[0]:
+		localState[4] = leaderId
 		localState[5] = 0
 	
 
@@ -235,21 +250,25 @@ def handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue
 	heartBeat(socketSet, localState)
 	leaderSuggest(socketSet, localState, existedDecision, requestQueue)
 	for tokens in dataTokenQueue:
+		if tokens == '':
+			pass
 		if tokens[0] == 'p':
 			respondPrepare(socketSet, localState, tokens[2], tokens[1])
 		elif tokens[0] == 'ac':
 			existedDecision.append([tokens[2],tokens[3]])
 			# here 0 could be replaced by any value proposed by client
+			if localState[9] >= len(requestQueue):
+				continue
 			leaderRespondAck(socketSet, localState, tokens[1], existedDecision, requestQueue[localState[9]])#1 is leader's choice
 			leaderSuggest(socketSet, localState, existedDecision, requestQueue)
 		elif tokens[0] == 'a1':
 			followerRespondAc(socketSet, localState, tokens[1], tokens[2], localState[4])
 		elif tokens[0] == 'a2':
-			leaderDecide(socketSet, localState, tokens[1], tokens[2])
+			leaderDecide(socketSet, localState, tokens[1], tokens[2], requestQueue)
 		elif tokens[0] == 'a3':
 			participantDecide(localState, tokens[1], tokens[2])
 		elif tokens[0] == 'h':
-			receiveHeart(localState, tokens[1]);
+			receiveHeart(localState, tokens[1], tokens[2]);
 	dataTokenQueue.clear()
 
 
@@ -260,25 +279,27 @@ def separateData(data,dataQueue):
 		if data[i] == 'p':
 			begin = i
 			i += 1
-			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h':
+			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g':
 				i += 1
 			dataQueue.append(data[begin:i])
 			i -= 1
 		if data[i] == 'a':
 			begin = i
 			i+=1
-			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h':
+			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g':
 				i += 1
 			dataQueue.append(data[begin:i])
 			i -= 1
 		if data[i] == 'h':
 			begin = i
 			i+=1
-			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h':
+			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g':
 				i += 1
 			dataQueue.append(data[begin:i])
 			i -= 1
-
+		if data[i] == 'g':
+			print("g")
+			pass
 
 
 def extractData(s):
@@ -367,6 +388,11 @@ def extractData(s):
 		while i < len(s) and s[i] != ',':
 			i += 1
 		tokens.append(s[begin:i])
+		i += 1
+		begin = i	
+		while i < len(s) and s[i] != ',':
+			i += 1
+		tokens.append(s[begin:i])	
 		return tokens
 
 def Parse(data):
@@ -407,6 +433,14 @@ def clientSetup(host,port):
 	return s
 
 
+def doConnect(host,port):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)  
+    try :         
+        sock.connect((host,port))
+    except :
+        pass 
+    return sock
 
 
 

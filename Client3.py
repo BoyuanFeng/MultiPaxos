@@ -6,6 +6,7 @@ from CommonLibrary import serverSetup
 from CommonLibrary import clientSetup
 from CommonLibrary import Parse
 from CommonLibrary import handler
+from CommonLibrary import doConnect
 
 
 
@@ -15,7 +16,8 @@ requestQueue = [1,3,5,7,9]
 
 
 def Client1(socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue):
-	s = clientSetup('',7777)
+	host,port = '',7777
+	s = doConnect(host,port)   
 	socketSet.append(s)
 	first[0] = 0
 	while first[0] == 0:
@@ -31,19 +33,27 @@ def Client1(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 		print("round " + str(count) )
 		count += 1
 		try:
+			conn1.send("g".encode('utf-8'))
+			print("send g 1")
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 			data = conn1.recv(1024)
 			data = data.decode("utf-8")
 			print("client1 received: " + data)
 			dataTokenQueue = Parse(data)
 			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
-		except socket.timeout: 
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
-
+		except socket.timeout:
+			try:
+				handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
+			except:
+				pass
+		except socket.error:
+			print("\r\nsocket error1,do reconnect") 
+			time.sleep(3)
+			conn1 = doConnect(host,port)   
+			socketSet[0] = conn1
 
 
 	#end actual work here
-
-	s.close()
 
 
 
@@ -52,7 +62,8 @@ def Client1(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 def Client2(socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue):
 	while first[0] == 1:
 		time.sleep(1)
-	s = clientSetup('',8888)
+	host,port = '',8888
+	s = doConnect(host,port)   
 	socketSet.append(s)
 	first[0] = 1
 
@@ -65,23 +76,31 @@ def Client2(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 		time.sleep(1)
 		#localLock.release()
 		try:
+			conn2.send("g".encode('utf-8'))
+			print("send g 2")
+			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
 			print("client2 received: " + data)
 			dataTokenQueue = Parse(data)
 			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
-		except socket.timeout: 
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
-
-
-	s.close()
+		except socket.timeout:
+			try:
+				handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
+			except:
+				pass
+		except socket.error: 
+			print("\r\nsocket error2,do reconnect ")
+			time.sleep(3)
+			conn2 = doConnect(host,port)   
+			socketSet[0] = conn2
 
 
 
 
 socketSet = []
 first = [1]
-localState = [0,2,-1,0,-1,0,0,2,0,0,0,100]
+localState = [0,2,-1,0,-1,0,0,1,0,0,0,100]
 
 
 C1 = threading.Thread(target = Client1, args = (socketSet,first, localState, dataTokenQueue, existedDecision, requestQueue))
