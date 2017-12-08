@@ -33,9 +33,6 @@ def Client1(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 		print("round " + str(count) )
 		count += 1
 		try:
-			conn1.send("g".encode('utf-8'))
-			print("send g 1")
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 			data = conn1.recv(1024)
 			data = data.decode("utf-8")
 			print("client1 received: " + data)
@@ -76,9 +73,6 @@ def Client2(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 		time.sleep(1)
 		#localLock.release()
 		try:
-			conn2.send("g".encode('utf-8'))
-			print("send g 2")
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
 			print("client2 received: " + data)

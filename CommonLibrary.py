@@ -21,7 +21,6 @@ def broadcast(socketSet, myId, message):
 	for i in range(len(socketSet)):
 		if i != myId:
 			try:
-				print("broadcast to "+str(i))
 				socketSet[i].send(message.encode('utf-8'))
 			except:
 				pass
@@ -196,11 +195,11 @@ def participantDecide(localState, bal, val):
 
 def heartBeat(socketSet, localState):
 	if localState[4] == localState[1]:
-		print("send heart beat, myId is " + str(localState[1]) + ", myBal is " + str(localState[0]))
+		#print("send heart beat, myId is " + str(localState[1]) + ", myBal is " + str(localState[0]))
 		broadcast(socketSet, localState[1], "h,"+str(localState[1])+","+str(localState[0]))
 
 def receiveHeart(localState, leaderId, leaderBal):
-	print("received heart beat, leaderId = " + str(leaderId) + ", leaderBal = " + str(leaderBal) )
+	#print("received heart beat, leaderId = " + str(leaderId) + ", leaderBal = " + str(leaderBal) )
 	leaderId = int(leaderId)
 	leaderBal = int(leaderId)
 	if leaderBal >= localState[0]:
@@ -298,7 +297,6 @@ def separateData(data,dataQueue):
 			dataQueue.append(data[begin:i])
 			i -= 1
 		if data[i] == 'g':
-			print("g")
 			pass
 
 

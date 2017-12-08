@@ -87,7 +87,6 @@ def Server2(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 		conn2.settimeout(1)
 		time.sleep(1)
 		try:
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
 			if data == "":

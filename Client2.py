@@ -38,7 +38,6 @@ def Server(socketSet,first, localState,dataTokenQueue,existedDecision,requestQue
 	while 1:
 		time.sleep(1)
 		try:
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 			data = conn2.recv(1024)
 			data = data.decode("utf-8")
 			if data == "":
@@ -86,7 +85,6 @@ def Client(socketSet,first, localState,dataTokenQueue,existedDecision,requestQue
 		print("round " + str(count) )
 		count += 1
 		try:
-			handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue)
 			data = conn1.recv(1024)
 			data = data.decode("utf-8")
 			print("client1 received: " + data)
