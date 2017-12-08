@@ -7,6 +7,7 @@ from CommonLibrary import clientSetup
 from CommonLibrary import Parse
 from CommonLibrary import handler
 from CommonLibrary import doConnect
+from CommonLibrary import writeToLog
 
 dataTokenQueue = []
 existedDecision = []

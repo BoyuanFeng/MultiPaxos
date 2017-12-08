@@ -1,3 +1,4 @@
+rm -f log*
 touch log0.txt
 touch log1.txt
 touch log2.txt

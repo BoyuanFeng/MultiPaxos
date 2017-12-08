@@ -28,6 +28,8 @@ def broadcast(socketSet, myId, message):
 
 def applyForLeader(socketSet, localState):
 	print("apply for leader")
+	writeToLog(localState,"apply for leader")
+
 	localState[0] += random.randint(1,10)  #ballotNum += 1
 	message = "p,"+str(localState[0])+","+str(localState[1])
 	broadcast(socketSet, localState[1], message)
@@ -49,19 +51,22 @@ def respondPrepare(socketSet, localState, potentialLeader, bal):
 def leaderRespondAck(socketSet, localState, theirBal, existedDecision, myValue):
 	myValue = int(myValue)
 	theirBal = int(theirBal)
-	
-	print("leaderRespondAck: myBal is " + str(localState[0]) + ", theirBal is " + str(theirBal))
+	s111 = "leaderRespondAck: myBal is " + str(localState[0]) + ", theirBal is " + str(theirBal) + "\n"
+	writeToLog(localState,s111)
+
 	if theirBal != localState[0]:
 		localState[6] = 0
 		return
 	localState[6] += 1		# ls[6]: current acknowledge number
-
-	print("current acknowledge number is " + str(localState[6]))
+	s111 = "current acknowledge number is " + str(localState[6]) + "\n"
+	writeToLog(localState,s111)
 
 	if localState[6] < localState[7]:	# ld[7]: number of majority
 		return
 	else:
 		print("I am THE leader!!!, my bal is " + str(localState[0]))
+		s111 = "I am THE leader!!!, my bal is " + str(localState[0]) + "\n"
+		writeToLog(localState,s111)		
 		localState[4] = localState[1]	# ls[4]: current leader id, ls[1] is myId
 		localState[6] = 0
 
@@ -75,8 +80,9 @@ def leaderSuggest(socketSet, localState, existedDecision, requestQueue):
 
 	if localState[4] != localState[1]:
 		return
-	print("requestCount is " + str(localState[9]) + ", myValue is " + str(myValue))
-
+	s111 = "requestCount is " + str(localState[9]) + ", myValue is " + str(myValue) + "\n"
+	writeToLog(localState,s111)		
+	
 	myValue = int(myValue)
 
 	if localState[10] != 0:
@@ -94,11 +100,9 @@ def leaderSuggest(socketSet, localState, existedDecision, requestQueue):
 	
 	if flag == 0:
 		# no decision already
-		print("leaderSuggest branch 1")
 		message = "a1,"+str(localState[0])+","+str(myValue)
 		broadcast(socketSet, localState[1], message)
 	else:
-		print("leaderSuggest branch 2")
 		# has decision now
 		val = existedDecision[0][1]
 		bal = existedDecision[0][0]
@@ -109,7 +113,8 @@ def leaderSuggest(socketSet, localState, existedDecision, requestQueue):
 		myValue = val
 		message = "a1,"+str(localState[0])+","+str(myValue)
 		broadcast(socketSet, localState[1], message)
-	print("leaderRespondAck: the message is " + message)
+	s111 = "leaderRespondAck: the message is " + message + "\n"
+	writeToLog(localState,s111)		
 	existedDecision.clear()
 
 
@@ -121,11 +126,28 @@ def followerRespondAc(socketSet, localState, receivedBal, receivedVal, leaderId)
 		localState[5] = 0
 		localState[2] = receivedVal
 		localState[4] = leaderId
-		print("leader is " + str(localState[4]))
+		s111 = "leader is " + str(localState[4]) + "\n"
+		writeToLog(localState,s111)				
 		message = "a2,"+str(receivedBal)+","+str(receivedVal)
 		message = message.encode('utf-8')
 		socketSet[leaderId].send(message)
-		
+	
+def writeToLog(localState,s1):
+		if localState[1] == 0:
+			with open("log0.txt", "a") as myfile:
+				myfile.write(s1)
+		if localState[1] == 1:
+			with open("log1.txt", "a") as myfile:		
+				myfile.write(s1)
+		if localState[1] == 2:
+			with open("log2.txt", "a") as myfile:
+				myfile.write(s1)
+		if localState[1] == 3:
+			with open("log3.txt", "a") as myfile:
+				myfile.write(s1)
+		if localState[1] == 4:
+			with open("log4.txt", "a") as myfile:
+				myfile.write(s1)
 
 def leaderDecide(socketSet, localState, bal, val, requestQueue):
 	bal = int(bal)
@@ -139,27 +161,17 @@ def leaderDecide(socketSet, localState, bal, val, requestQueue):
 		localState[2] = val
 		localState[3] = val
 		broadcast(socketSet, localState[1],"a3,"+str(bal)+","+str(val))
-		print("decided: final value is " + str(val) + ", final bal is " + str(bal))
+		s111 = "leader decided: final value is " + str(val) + ", final bal is " + str(bal) + "\n"
+		writeToLog(localState, s111)
+		print(s111)
 		localState[11] -= val
 		localState[10] = 0
 		localState[8] = 0
 		localState[9] += 1
 		s1 = "val: " + str(val) + ", bal: " + str(bal) + ", ticket is: " + str(localState[11]) + "\n"
-		if localState[1] == 0:
-			with open("log0.txt", "a") as myfile:
-				myfile.write(s1)
-		if localState[1] == 1:
-			with open("log1.txt", "a") as myfile:		
-				myfile.write(s1)
-		if localState[1] == 2:
-			with open("log2.txt", "a") as myfile:
-				myfile.write(s1)
-		if localState[1] == 3:
-			with open("log3.txt", "a") as myfile:
-				myfile.write(s1)
-		if localState[1] == 4:
-			with open("log4.txt", "a") as myfile:
-				myfile.write(s1)
+		writeToLog(localState,s1)
+
+
 	else:
 		localState[8] = 0
 
@@ -170,27 +182,12 @@ def participantDecide(localState, bal, val):
 	if bal >= localState[0]:
 		localState[2] = val
 		localState[3] = bal
-		print("decided: final value is " + str(val) + ", final bal is " + str(bal))
+		s111 = "decided: final value is " + str(val) + ", final bal is " + str(bal) + "\n"
+		writeToLog(localState, s111)
+		print(s111)
 		localState[11] -= val
 		s1 = "val: " + str(val) + ", bal: " + str(bal) + ", ticket is: " + str(localState[11]) + "\n"
-		if localState[1] == 0:
-			with open("log0.txt", "a") as myfile:
-				myfile.write(s1)
-		if localState[1] == 1:
-			with open("log1.txt", "a") as myfile:		
-				myfile.write(s1)
-		if localState[1] == 2:
-			with open("log2.txt", "a") as myfile:
-				myfile.write(s1)
-		if localState[1] == 3:
-			with open("log3.txt", "a") as myfile:
-				myfile.write(s1)
-		if localState[1] == 4:
-			with open("log4.txt", "a") as myfile:
-				myfile.write(s1)
-		if localState[1] == 5:
-			with open("log5.txt", "a") as myfile:
-				myfile.write(s1)
+		writeToLog(localState,s1)
 
 
 def heartBeat(socketSet, localState):
@@ -232,15 +229,15 @@ def handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue
 	if localState[4] == localState[1]:
 		localState[5] = 0
 	if localState[1] == 0 and localState[5] > 10 and localState[5] < 40:
-		print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
+		#print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
 		localState[5] = 0
 		applyForLeader(socketSet, localState)
 	if localState[1] == 1 and localState[5] >= 40 and localState[5] < 70:
-		print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
+		#print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
 		localState[5] = 0
 		applyForLeader(socketSet, localState)
 	if localState[1] == 0 and localState[5] >= 70:
-		print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
+		#print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
 		localState[5] = 0
 		applyForLeader(socketSet, localState)
 
