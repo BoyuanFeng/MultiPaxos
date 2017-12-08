@@ -48,19 +48,20 @@ def respondPrepare(socketSet, localState, potentialLeader, bal):
 
 
 
-def leaderRespondAck(socketSet, localState, theirBal, existedDecision, myValue):
-	myValue = int(myValue)
+def leaderRespondAck(socketSet, localState, theirBal, existedDecision):
+	print("enter ack")
 	theirBal = int(theirBal)
 	s111 = "leaderRespondAck: myBal is " + str(localState[0]) + ", theirBal is " + str(theirBal) + "\n"
 	writeToLog(localState,s111)
 
 	if theirBal != localState[0]:
+		print("clear previous leader bal")
 		localState[6] = 0
 		return
 	localState[6] += 1		# ls[6]: current acknowledge number
 	s111 = "current acknowledge number is " + str(localState[6]) + "\n"
 	writeToLog(localState,s111)
-
+	print("localState[6] is " + str(localState[6]) + ", localState[7] is " + str(localState[7]))
 	if localState[6] < localState[7]:	# ld[7]: number of majority
 		return
 	else:
@@ -203,6 +204,11 @@ def receiveHeart(localState, leaderId, leaderBal):
 		localState[4] = leaderId
 		localState[5] = 0
 	
+def receiveRequest(suggestedVal,requestQueue, localState):
+	print("enter receive request")
+	suggestedVal = int(suggestedVal)
+	if localState[4] == localState[1]:
+		requestQueue.append(suggestedVal)
 
 # applyForLeader: non-leader now. want to become leader. DO: receive nothing, send "p"
 # (socketSet, localState)
@@ -226,6 +232,8 @@ def receiveHeart(localState, leaderId, leaderBal):
 
 def handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue):
 	localState[5] += 1
+	if localState[4] != localState[1]:
+		requestQueue.clear()
 	if localState[4] == localState[1]:
 		localState[5] = 0
 	if localState[1] == 0 and localState[5] > 10 and localState[5] < 40:
@@ -253,9 +261,10 @@ def handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue
 		elif tokens[0] == 'ac':
 			existedDecision.append([tokens[2],tokens[3]])
 			# here 0 could be replaced by any value proposed by client
+			leaderRespondAck(socketSet, localState, tokens[1], existedDecision)#1 is leader's choice
 			if localState[9] >= len(requestQueue):
 				continue
-			leaderRespondAck(socketSet, localState, tokens[1], existedDecision, requestQueue[localState[9]])#1 is leader's choice
+			print("here")
 			leaderSuggest(socketSet, localState, existedDecision, requestQueue)
 		elif tokens[0] == 'a1':
 			followerRespondAc(socketSet, localState, tokens[1], tokens[2], localState[4])
@@ -265,6 +274,8 @@ def handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue
 			participantDecide(localState, tokens[1], tokens[2])
 		elif tokens[0] == 'h':
 			receiveHeart(localState, tokens[1], tokens[2]);
+		elif tokens[0] == 'r':
+			receiveRequest(tokens[1],requestQueue, localState)
 	dataTokenQueue.clear()
 
 
@@ -275,26 +286,33 @@ def separateData(data,dataQueue):
 		if data[i] == 'p':
 			begin = i
 			i += 1
-			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g':
+			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g' and data[i] != 'r':
 				i += 1
 			dataQueue.append(data[begin:i])
 			i -= 1
 		if data[i] == 'a':
 			begin = i
 			i+=1
-			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g':
+			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g' and data[i] != 'r':
 				i += 1
 			dataQueue.append(data[begin:i])
 			i -= 1
 		if data[i] == 'h':
 			begin = i
 			i+=1
-			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g':
+			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g' and data[i] != 'r':
 				i += 1
 			dataQueue.append(data[begin:i])
 			i -= 1
 		if data[i] == 'g':
 			pass
+		if data[i] == 'r':
+			begin = i
+			i+=1
+			while i < len(data) and data[i] != 'p' and data[i] != 'a' and data[i] != 'h' and data[i] != 'g' and data[i] != 'r':
+				i += 1
+			dataQueue.append(data[begin:i])
+			i -= 1
 
 
 def extractData(s):
@@ -389,6 +407,16 @@ def extractData(s):
 			i += 1
 		tokens.append(s[begin:i])	
 		return tokens
+	elif s[0] == 'r':
+		tokens.append("r")
+		begin = 2
+		i = 2
+		while i < len(s) and s[i] != ',':
+			i += 1
+		tokens.append(s[begin:i])
+		i += 1
+		return tokens
+
 
 def Parse(data):
 	dataQueue = []
@@ -436,6 +464,34 @@ def doConnect(host,port):
     except :
         pass 
     return sock
+
+def requestToLeader(socketSet, localState, suggestedVal):
+	message = "r,"+str(suggestedVal)
+	broadcast(socketSet, localState[1], message)
+	print("sent request " + str(message))
+
+
+def handleInput(socketSet, localState, requestQueue):
+	i, o, e = select.select( [sys.stdin], [], [], 1 )
+	if (i):
+		MyWord = sys.stdin.readline().strip()
+		print(MyWord)
+		if len(MyWord) == 0:
+			return
+		if MyWord == "show":
+			print("current ticket number is " + str(localState[11]))
+		elif MyWord[0] == 'b' and MyWord[1] == 'u' and MyWord[2] == 'y':
+			print("enter buy")
+			num = ""
+			wordI = 4
+			while wordI < len(MyWord):
+				num += MyWord[wordI]
+				wordI += 1
+			num = int(num)
+			if localState[1] == localState[4]:
+				requestQueue.append(num)
+			else:
+				requestToLeader(socketSet, localState, num)		
 
 
 

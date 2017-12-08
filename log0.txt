@@ -1,0 +1,6 @@
+apply for leaderleaderRespondAck: myBal is 8, theirBal is 8
+current acknowledge number is 1
+I am THE leader!!!, my bal is 8
+leaderRespondAck: myBal is 8, theirBal is 8
+current acknowledge number is 1
+I am THE leader!!!, my bal is 8

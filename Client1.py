@@ -8,6 +8,7 @@ from CommonLibrary import Parse
 from CommonLibrary import handler
 from CommonLibrary import doConnect
 from CommonLibrary import writeToLog
+from CommonLibrary import handleInput
 
 dataTokenQueue = []
 existedDecision = []
@@ -37,6 +38,7 @@ def Server1(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 	#finish setting up and start actual work here
 	count = 1
 	while 1:
+		handleInput(socketSet, localState, requestQueue)
 		conn1.settimeout(1)
 		time.sleep(1)
 
@@ -85,6 +87,7 @@ def Server2(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 
 
 	while 1:
+		handleInput(socketSet, localState, requestQueue)
 		conn2.settimeout(1)
 		time.sleep(1)
 		try:

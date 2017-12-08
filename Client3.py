@@ -7,7 +7,7 @@ from CommonLibrary import clientSetup
 from CommonLibrary import Parse
 from CommonLibrary import handler
 from CommonLibrary import doConnect
-
+from CommonLibrary import handleInput
 
 
 dataTokenQueue = []
@@ -29,6 +29,7 @@ def Client1(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 	count = 1
 	#finish setting up and start actual work here
 	while 1:
+		handleInput(socketSet, localState, requestQueue)
 		time.sleep(1)
 		print("round " + str(count) )
 		count += 1
@@ -69,6 +70,7 @@ def Client2(socketSet,first, localState, dataTokenQueue, existedDecision, reques
 
 	#finish setting up and start actual work here
 	while 1:
+		handleInput(socketSet, localState, requestQueue)
 		#localLock.acquire()
 		time.sleep(1)
 		#localLock.release()

@@ -7,6 +7,7 @@ from CommonLibrary import clientSetup
 from CommonLibrary import Parse
 from CommonLibrary import handler
 from CommonLibrary import doConnect
+from CommonLibrary import handleInput
 
 
 dataTokenQueue = []
@@ -36,6 +37,7 @@ def Server(socketSet,first, localState,dataTokenQueue,existedDecision,requestQue
 
 	#finish setting up and start actual work here
 	while 1:
+		handleInput(socketSet, localState, requestQueue)
 		time.sleep(1)
 		try:
 			data = conn2.recv(1024)
@@ -80,8 +82,8 @@ def Client(socketSet,first, localState,dataTokenQueue,existedDecision,requestQue
 	count = 1
 	#finish setting up and start actual work here
 	while 1:
+		handleInput(socketSet, localState, requestQueue)
 		time.sleep(1)
-
 		print("round " + str(count) )
 		count += 1
 		try:
