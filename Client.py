@@ -21,15 +21,23 @@ def Server1(addressSet):
 	sock.bind((addressSet[localState[1]][0],addressSet[localState[1]][1]))  
 	sock.listen(100)  
 	sock.settimeout(1)  
+	heartCount = 0
 	while 1:
 		try:
-			time.sleep(.1)			
+			time.sleep(.05)			
 			conn1,address = sock.accept()  
 			conn1.settimeout(1)
 			try:
 				data = conn1.recv(1024)
 				data = data.decode("utf-8")
-				print("received: " + data)
+				if len(data) > 0 and data[0] == 'h':
+					heartCount += 1
+					if heartCount % 5 == 0:
+						print("received: " + data)
+						heartCount = 0
+				else:
+					print("received: " + data)
+
 				lock.acquire()
 				dataTokenQueue = Parse(data)
 				handler(addressSet, localState, dataTokenQueue, existedDecision, requestQueue)
@@ -45,7 +53,7 @@ def Server2(addressSet):
 	global localState, dataTokenQueue, existedDecision, requestQueue	
 	count = 1
 	while 1:
-		time.sleep(.1)	
+		time.sleep(.051)	
 		if count % 5 == 0:				
 			print("round " + str(count/5) )
 		count += 1
@@ -61,7 +69,8 @@ if len(sys.argv) != 2:
 	print("input invalid")
 	sys.exit(1)
 localState[1] = int(sys.argv[1])
-
+if localState[1] == 3 or localState[1] == 4:
+	localState[7] = 2
 
 addressSet = [['',6666],['',7777],['',8888],['',9000],['',9999]]
 

@@ -89,7 +89,7 @@ def leaderRespondAck(addressSet, localState, theirBal, existedDecision):
 def leaderSuggest(addressSet, localState, existedDecision, requestQueue):
 	#print("enter leaderSuggest")
 	if localState[9] >= len(requestQueue):
-		time.sleep(.1)
+		time.sleep(.051)
 		return
 	myValue = requestQueue[localState[9]]
 
@@ -98,8 +98,8 @@ def leaderSuggest(addressSet, localState, existedDecision, requestQueue):
 
 	if localState[4] != localState[1]:
 		return
-	s111 = "requestCount is " + str(localState[9]) + ", myValue is " + str(myValue) + "\n"
-	writeToLog(localState,s111)		
+	#s111 = "requestCount is " + str(localState[9]) + ", myValue is " + str(myValue) + "\n"
+	#writeToLog(localState,s111)		
 	
 	#print("enter leaderSuggest2")
 
@@ -179,6 +179,7 @@ def writeToLog(localState,s1):
 				myfile.write(s1)
 
 def leaderDecide(addressSet, localState, bal, val, requestQueue):
+	print("leaderDecide")
 	bal = int(bal)
 	val = int(val)
 	if localState[4] != localState[1]:
@@ -222,15 +223,31 @@ def participantDecide(localState, bal, val):
 def heartBeat(addressSet, localState):
 	if localState[4] == localState[1]:
 		#print("send heart beat, myId is " + str(localState[1]) + ", myBal is " + str(localState[0]))
-		broadcast(addressSet, localState[1], "h,"+str(localState[1])+","+str(localState[0]), localState)
+		broadcast(addressSet, localState[1], "h,"+str(localState[1])+","+str(localState[0])+","+str(localState[11]), localState)
 
-def receiveHeart(localState, leaderId, leaderBal):
+def receiveHeart(localState, leaderId, leaderBal, ticketNum):
 	#print("received heart beat, leaderId = " + str(leaderId) + ", leaderBal = " + str(leaderBal) )
 	leaderId = int(leaderId)
-	leaderBal = int(leaderId)
+	leaderBal = int(leaderBal)
+	ticketNum = int(ticketNum)
+	'''
+	if localState[1] == 3:
+		print("localState[1] is " + str(localState[1]))
+		print("leaderBal is " + str(leaderBal))
+		print("localState[0] is " + str(localState[0]))
+	'''
 	if leaderBal >= localState[0]:
+		#if localState[1] == 3:
+		#	print("localState[11] is " + str(localState[11]))
+
+
+		localState[0] = leaderBal
 		localState[4] = leaderId
 		localState[5] = 0
+		localState[11] = ticketNum
+		#if localState[1] == 3:
+		#	print("localState[11] is " + str(localState[11]))
+
 	
 def receiveRequest(suggestedVal,requestQueue, localState):
 	print("enter receive request")
@@ -275,7 +292,7 @@ def handler(addressSet, localState, dataTokenQueue, existedDecision, requestQueu
 		#print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
 		localState[5] = 0
 		applyForLeader(addressSet, localState)
-	if localState[1] == 0 and localState[5] >= 40:
+	if localState[1] == 2 and localState[5] >= 40:
 		#print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
 		localState[5] = 0
 		applyForLeader(addressSet, localState)
@@ -304,16 +321,16 @@ def handler(addressSet, localState, dataTokenQueue, existedDecision, requestQueu
 			localState[5] = 0
 			followerRespondAc(addressSet, localState, tokens[1], tokens[2], localState[4])
 		elif tokens[0] == 'a2':
-			#print("a2")
+			print("a2")
 			leaderDecide(addressSet, localState, tokens[1], tokens[2], requestQueue)
 		elif tokens[0] == 'a3':
-			#print("a3")
+			print("a3")
 			participantDecide(localState, tokens[1], tokens[2])
 		elif tokens[0] == 'h':
 			#print("h")
 			localState[5] = 0
 
-			receiveHeart(localState, tokens[1], tokens[2]);
+			receiveHeart(localState, tokens[1], tokens[2], tokens[3]);
 		elif tokens[0] == 'r':
 			#print("r")
 			receiveRequest(tokens[1],requestQueue, localState)
@@ -447,6 +464,11 @@ def extractData(s):
 		while i < len(s) and s[i] != ',':
 			i += 1
 		tokens.append(s[begin:i])	
+		i += 1
+		begin = i	
+		while i < len(s) and s[i] != ',':
+			i += 1
+		tokens.append(s[begin:i])	
 		return tokens
 	elif s[0] == 'r':
 		tokens.append("r")
@@ -523,7 +545,11 @@ def handleInput(addressSet, localState, requestQueue):
 			if localState[1] == localState[4]:
 				requestQueue.append(num)
 			else:
-				requestToLeader(addressSet, localState, num)		
+				requestToLeader(addressSet, localState, num)	
+		elif MyWord[0] == 'c' and MyWord[1] == 'h':
+			if localState[7] == 1:
+				localState[7] = 2
+				localState[4] = -1
 
 
 
