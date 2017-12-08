@@ -236,11 +236,11 @@ def handler(socketSet, localState, dataTokenQueue, existedDecision, requestQueue
 		requestQueue.clear()
 	if localState[4] == localState[1]:
 		localState[5] = 0
-	if localState[1] == 0 and localState[5] > 10 and localState[5] < 40:
+	if localState[1] == 0 and localState[5] > 10 and localState[5] < 20:
 		#print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
 		localState[5] = 0
 		applyForLeader(socketSet, localState)
-	if localState[1] == 1 and localState[5] >= 40 and localState[5] < 70:
+	if localState[1] == 1 and localState[5] >= 20 and localState[5] < 70:
 		#print("silence time is " + str(localState[5]) + ", ballotNum is " + str(localState[0]))
 		localState[5] = 0
 		applyForLeader(socketSet, localState)
